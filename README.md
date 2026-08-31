@@ -256,10 +256,6 @@ A small live enhancement worth adding for demos: a *"tamper"* control on the led
 
 ## Links
 
-- GitHub repository: `[ add link ]`
-- Live demo (hosted): `[ add link ]`
-- Team / contact: `[ add team name & contact ]`
-
-## License
-
-The `Voting.sol` contract is released under the **MIT License** (see the SPDX identifier in the source above). Apply your team's preferred license to the rest of the project as appropriate.
+- GitHub repository: `https://github.com/apurvaanand51/decentravote`
+- Live demo (hosted): `https://de-centravote.netlify.app/`
+- Team / contact: Apurva Anand | Ishika Pandey | Himanshu Rai | Arjita Shrivastav | Mirza Hayat
