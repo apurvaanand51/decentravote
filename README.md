@@ -256,6 +256,6 @@ A small live enhancement worth adding for demos: a *"tamper"* control on the led
 
 ## Links
 
-- GitHub repository: `https://github.com/apurvaanand51/decentravote`
-- Live demo (hosted): `https://de-centravote.netlify.app/`
+- GitHub repository: [Github](https://github.com/apurvaanand51/decentravote)
+- Live demo (hosted): [de-centravote.netlify.app](https://de-centravote.netlify.app)
 - Team / contact: Apurva Anand | Ishika Pandey | Himanshu Rai | Arjita Shrivastav | Mirza Hayat
