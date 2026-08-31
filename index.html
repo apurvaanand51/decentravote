@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DecentraVote — Live Demo Dashboard</title>
+<style>
+  :root{
+    color-scheme: light;
+    --navy:#212171; --navy2:#32328A; --orange:#F26522; --orangeDk:#C74E12;
+    --green:#117431; --purple:#781CBD; --ink:#17181D; --slate:#55606E; --mute:#8A94A3;
+    --wash:#F5F7FB; --white:#FFFFFF; --line:#DADFEA; --hair:#E7EBF3; --red:#C0392B;
+    --orTint:#FCEBE1; --nvTint:#E9E9F6; --gnTint:#E2F0E8; --rdTint:#F9E9E7; --puTint:#F0E6F8; --slTint:#EEF1F7;
+    --mono:"SFMono-Regular",ui-monospace,"Consolas","Liberation Mono","Courier New",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"Helvetica Neue",sans-serif;
+    --shadow:0 1px 2px rgba(20,25,40,.04),0 6px 20px rgba(20,25,40,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--wash);color:var(--ink);line-height:1.45;
+    -webkit-font-smoothing:antialiased;font-size:15px}
+  a{color:var(--navy)}
+  .mono{font-family:var(--mono)}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 22px}
+
+  /* ---------- header ---------- */
+  header.app{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid var(--hair)}
+  .head-row{display:flex;align-items:center;gap:16px;padding:12px 0}
+  .wordmark{font-weight:800;font-size:22px;letter-spacing:-.5px}
+  .wordmark .a{color:var(--navy)} .wordmark .b{color:var(--orange)}
+  .badge{font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--orangeDk);background:var(--orTint);border:1px solid #F3D3C1;
+    padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .tagline{color:var(--mute);font-size:12.5px;letter-spacing:.3px}
+  .head-right{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+    padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--white);color:var(--slate)}
+  .pill .dot{width:8px;height:8px;border-radius:50%}
+  .pill.open{color:var(--green);border-color:#BFE0CB;background:var(--gnTint)}
+  .pill.open .dot{background:var(--green);box-shadow:0 0 0 3px rgba(17,116,49,.15)}
+  .pill.closed{color:var(--slate);background:var(--slTint)}
+  .pill.closed .dot{background:var(--mute)}
+  .pill.net{color:var(--navy);background:var(--nvTint);border-color:#CFCFF0}
+
+  /* ---------- tabs ---------- */
+  nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--hair)}
+  nav.tabs button{appearance:none;border:0;background:none;cursor:pointer;font-family:inherit;
+    font-size:14px;font-weight:700;color:var(--slate);padding:13px 16px;border-bottom:2.5px solid transparent;
+    display:inline-flex;align-items:center;gap:8px;letter-spacing:.2px}
+  nav.tabs button:hover{color:var(--ink)}
+  nav.tabs button.active{color:var(--navy);border-bottom-color:var(--orange)}
+  nav.tabs button .ti{width:17px;height:17px;flex:0 0 auto}
+
+  main{padding:26px 0 60px}
+  .section-h{font-size:12px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--slate);margin:0 0 12px}
+  h1.page{font-size:26px;font-weight:800;letter-spacing:-.4px;margin:2px 0 4px}
+  .lead{color:var(--slate);max-width:70ch;margin:0 0 22px;font-size:15px}
+
+  .card{background:var(--white);border:1px solid var(--hair);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .pad{padding:18px}
+  .grid{display:grid;gap:16px}
+
+  /* ---------- icon circle ---------- */
+  .icirc{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .icirc svg{width:52%;height:52%}
+
+  /* ---------- workflow steps ---------- */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .step{position:relative;background:var(--white);border:1px solid var(--hair);border-radius:var(--radius);
+    padding:16px 15px;box-shadow:var(--shadow)}
+  .step .num{position:absolute;top:12px;right:13px;font-weight:800;font-size:13px;color:var(--white);
+    width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+  .step h3{margin:12px 0 3px;font-size:16px;font-weight:800;letter-spacing:.2px}
+  .step .sub{color:var(--slate);font-size:12.5px;margin:0 0 7px;font-weight:600}
+  .step p{margin:0;color:var(--slate);font-size:12.5px}
+  .flowline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:stretch}
+  .layer{background:var(--white);border:1px solid var(--hair);border-radius:12px;padding:12px 10px;text-align:center;box-shadow:var(--shadow)}
+  .layer .lname{font-weight:800;font-size:12px;letter-spacing:.4px;margin-top:8px}
+  .layer .ltech{color:var(--slate);font-size:11px;margin-top:2px;font-family:var(--mono)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .kv{border-radius:12px;padding:14px}
+  .kv .t{font-weight:800;font-size:12px;letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
+  .kv.off{background:var(--slTint)} .kv.off .t{color:var(--slate)}
+  .kv.on{background:var(--orTint)} .kv.on .t{color:var(--orangeDk)}
+  .kv ul{margin:0;padding-left:16px} .kv li{font-size:13px;margin:2px 0}
+
+  /* ---------- buttons ---------- */
+  .btn{appearance:none;font-family:inherit;font-weight:700;font-size:13.5px;border-radius:10px;
+    padding:10px 16px;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;transition:.12s}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{background:var(--orange);color:#fff}
+  .btn-primary:not(:disabled):hover{background:var(--orangeDk)}
+  .btn-navy{background:var(--navy);color:#fff}
+  .btn-navy:not(:disabled):hover{background:var(--navy2)}
+  .btn-ghost{background:var(--white);color:var(--navy);border-color:var(--line)}
+  .btn-ghost:not(:disabled):hover{border-color:var(--navy);background:var(--nvTint)}
+  .btn-sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+
+  /* ---------- live election ---------- */
+  .electionbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .electionbar .name{font-size:17px;font-weight:800}
+  .electionbar .meta{color:var(--slate);font-size:12px;font-family:var(--mono)}
+  .electionbar .ctrls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .cols3{display:grid;grid-template-columns:1.05fr 1.1fr 1fr;gap:16px;align-items:start}
+
+  .acct{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:9px 11px;width:100%;
+    background:var(--white);cursor:pointer;text-align:left;font-family:inherit;transition:.12s}
+  .acct:hover{border-color:var(--navy);background:var(--nvTint)}
+  .acct.sel{border-color:var(--navy);background:var(--nvTint);box-shadow:0 0 0 2px rgba(33,33,113,.12)}
+  .acct .av{width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:12px;color:#fff}
+  .acct .nm{font-weight:700;font-size:13px} .acct .ad{font-size:11px;color:var(--mute);font-family:var(--mono)}
+  .tag{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:999px}
+  .tag.elig{color:var(--green);background:var(--gnTint)}
+  .tag.inelig{color:var(--red);background:var(--rdTint)}
+  .tag.voted{color:var(--slate);background:var(--slTint)}
+
+  .conn{display:flex;align-items:center;gap:11px;border:1px dashed var(--line);border-radius:11px;padding:11px;background:var(--slTint)}
+  .conn.live{border-style:solid;border-color:#BFE0CB;background:var(--gnTint)}
+
+  .cand{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:11px;padding:11px;cursor:pointer;
+    background:var(--white);transition:.12s;margin-bottom:9px}
+  .cand:hover{border-color:var(--navy)}
+  .cand.sel{border-color:var(--navy);background:var(--nvTint);box-shadow:0 0 0 2px rgba(33,33,113,.12)}
+  .cand .sym{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+  .cand .cn{font-weight:800;font-size:14px} .cand .cp{font-size:12px;color:var(--slate)}
+  .cand .radio{margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line)}
+  .cand.sel .radio{border-color:var(--navy);background:var(--navy);box-shadow:inset 0 0 0 3px #fff}
+
+  .hint{font-size:12px;color:var(--slate);background:var(--nvTint);border:1px solid #D8D8F0;border-radius:10px;padding:10px 12px}
+  .hint b{color:var(--navy)}
+
+  /* results */
+  .resrow{margin-bottom:12px}
+  .resrow .top{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:5px}
+  .resrow .top .nm{font-weight:700} .resrow .top .ct{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+  .resrow .top .pc{color:var(--mute);font-size:12px;font-variant-numeric:tabular-nums;width:44px;text-align:right}
+  .bar{height:12px;border-radius:999px;background:var(--slTint);overflow:hidden}
+  .bar > span{display:block;height:100%;border-radius:999px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px}
+  .stat{background:var(--wash);border:1px solid var(--hair);border-radius:11px;padding:11px}
+  .stat .v{font-size:22px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11px;color:var(--slate);font-weight:600;margin-top:1px}
+
+  /* ledger */
+  .ledger{display:flex;flex-direction:column;gap:9px}
+  .block{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+    border:1px solid var(--hair);border-radius:12px;padding:11px 14px;background:var(--white)}
+  .block.genesis{background:var(--slTint)}
+  .block .bn{text-align:center;min-width:52px}
+  .block .bn .k{font-size:9.5px;font-weight:800;letter-spacing:.8px;color:var(--mute)}
+  .block .bn .v{font-size:19px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+  .block .mid .line1{font-size:12.5px}
+  .block .mid .evt{font-family:var(--mono);font-size:11.5px;color:var(--green);margin-top:3px;word-break:break-all}
+  .block .mid .meta{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:2px;word-break:break-all}
+  .block .right{text-align:right;min-width:130px}
+  .block .right .h{font-family:var(--mono);font-size:11px;color:var(--slate);word-break:break-all}
+  .block .right .g{font-size:10.5px;color:var(--mute);margin-top:3px}
+  @keyframes flashin{0%{transform:translateY(-6px);box-shadow:0 0 0 3px rgba(242,101,34,.35)}100%{transform:none;box-shadow:none}}
+  .block.flash{animation:flashin .9s ease-out}
+  .chaincheck{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--green)}
+
+  table.audit{width:100%;border-collapse:collapse;font-size:13px}
+  table.audit th,table.audit td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--hair)}
+  table.audit th{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--slate)}
+  table.audit td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .match{display:flex;align-items:center;gap:9px;background:var(--gnTint);border:1px solid #BFE0CB;border-radius:11px;padding:11px 13px;color:var(--green);font-weight:700;font-size:13.5px}
+
+  .rej{display:flex;align-items:center;gap:10px;border:1px solid #EEC9C3;background:var(--rdTint);border-radius:10px;padding:9px 12px;font-size:12.5px}
+  .rej .r{font-family:var(--mono);color:var(--red);font-weight:700}
+  .rej .hh{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--mute)}
+
+  /* impact */
+  .effcards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .eff{background:var(--white);border:1px solid var(--hair);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+  .eff h3{margin:11px 0 5px;font-size:15px;font-weight:800}
+  .eff p{margin:0;color:var(--slate);font-size:13px}
+  table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;overflow:hidden;border-radius:12px}
+  table.cmp th,table.cmp td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--hair)}
+  table.cmp thead th{background:var(--navy);color:#fff;font-size:12px;letter-spacing:.4px}
+  table.cmp tbody th{background:var(--slTint);color:var(--navy);font-weight:800;font-size:12.5px}
+  table.cmp td.dv{background:var(--gnTint)}
+  .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .metric{background:var(--white);border:1px solid var(--hair);border-radius:12px;padding:14px;box-shadow:var(--shadow);text-align:center}
+  .metric .v{font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--navy);font-variant-numeric:tabular-nums}
+  .metric .l{font-size:11px;color:var(--slate);font-weight:600;margin-top:3px}
+
+  .note{font-size:12.5px;color:var(--slate);background:var(--white);border:1px solid var(--hair);border-left:3px solid var(--orange);
+    border-radius:10px;padding:12px 14px}
+
+  /* contract viewer */
+  details.contract{background:#1a1a2e;border:1px solid #2a2a48;border-radius:var(--radius);overflow:hidden}
+  details.contract summary{cursor:pointer;list-style:none;padding:12px 16px;color:#e8e8f5;font-weight:700;font-size:13.5px;
+    display:flex;align-items:center;gap:9px}
+  details.contract summary::-webkit-details-marker{display:none}
+  details.contract pre{margin:0;padding:0 16px 16px;overflow:auto;max-height:420px}
+  details.contract code{font-family:var(--mono);font-size:12px;line-height:1.55;color:#cdd3f0;white-space:pre}
+  .sol-k{color:#ff9e6d} .sol-c{color:#6b7394;font-style:italic} .sol-s{color:#9ae6a4} .sol-f{color:#8ab4ff}
+
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:80;
+    max-width:min(560px,92vw);opacity:0;pointer-events:none;transition:.28s}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast{display:flex;align-items:flex-start;gap:12px;background:var(--ink);color:#fff;border-radius:12px;
+    padding:13px 16px;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+  .toast.good{background:#123a22;border:1px solid #1f6b3d}
+  .toast.bad{background:#3a1614;border:1px solid #7d2b25}
+  .toast .tt{font-weight:800;font-size:13.5px;margin-bottom:2px}
+  .toast .td{font-size:12px;opacity:.9;font-family:var(--mono);word-break:break-all}
+
+  /* footer */
+  footer.stack{border-top:1px solid var(--hair);background:var(--white);padding:16px 0;margin-top:8px}
+  .stackrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--slate)}
+  .stackrow .lab{font-weight:800;color:var(--ink);letter-spacing:.3px}
+  .chip{font-family:var(--mono);font-size:11.5px;background:var(--slTint);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--navy)}
+  .disclaim{color:var(--mute);font-size:11.5px;margin-top:8px}
+
+  .mt{margin-top:22px} .mt-sm{margin-top:14px} .mb-sm{margin-bottom:12px}
+  .rowbetween{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+  @media (max-width:940px){
+    .cols3{grid-template-columns:1fr} .steps{grid-template-columns:repeat(2,1fr)}
+    .flowline{grid-template-columns:repeat(2,1fr)} .effcards{grid-template-columns:1fr}
+    .metrics{grid-template-columns:repeat(2,1fr)} .split{grid-template-columns:1fr}
+    .block{grid-template-columns:auto 1fr} .block .right{grid-column:2;text-align:left;margin-top:6px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="app">
+  <div class="wrap">
+    <div class="head-row">
+      <div class="wordmark"><span class="a">DECENTRA</span><span class="b">VOTE</span></div>
+      <span class="badge">Prototype · simulated chain</span>
+      <span class="tagline">Transparent · Verifiable · Auditable</span>
+      <div class="head-right" id="headRight"></div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+</header>
+
+<main><div class="wrap" id="view"></div></main>
+
+<footer class="stack"><div class="wrap">
+  <div class="stackrow">
+    <span class="lab">Production stack</span>
+    <span class="chip">React.js</span><span class="chip">ethers.js</span><span class="chip">MetaMask / Wallet</span>
+    <span class="chip">Solidity</span><span class="chip">Ethereum test net</span><span class="chip">Hardhat</span>
+    <span class="chip">Node.js</span><span class="chip">npm</span>
+  </div>
+  <div class="disclaim">This dashboard runs entirely in your browser with no network or wallet required. The blockchain layer
+    (blocks, transaction hashes, <span class="mono">VoteCast</span> events) is <b>simulated</b> to demonstrate the DecentraVote contract logic.
+    In production the same logic runs as a Solidity smart contract on an Ethereum-compatible test network, called from a React front end via ethers.js.
+    Candidates and voters shown here are fictional. This is a prototype — not a system for running real, binding elections.</div>
+</div></footer>
+
+<div id="toast"></div>
+
+<!-- ============ simulated engine (identical to tested engine.js) ============ -->
+<script>
+/* DecentraVote simulated on-chain voting engine — mirrors Voting.sol guards. */
+(function (root) {
+  'use strict';
+  function fnv1a(str, seed){var h=(2166136261^seed)>>>0;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+  function hex8(n){return ('00000000'+(n>>>0).toString(16)).slice(-8);}
+  function hashHex(str){var out='0x';for(var s=0;s<8;s++)out+=hex8(fnv1a(str,(s*0x9e3779b1)>>>0));return out;}
+  function makeAddress(seed){var out='0x';for(var s=0;s<5;s++)out+=hex8(fnv1a('addr:'+seed,(s*0x85ebca6b)>>>0));return out;}
+  function shortAddr(a){return a.slice(0,6)+'…'+a.slice(-4);}
+  function defaultCandidates(){return[
+    {id:0,name:'Aisha Verma',party:'Unity Front',color:'212171',voteCount:0},
+    {id:1,name:'Rohan Das',party:'Progress Alliance',color:'F26522',voteCount:0},
+    {id:2,name:'Meera Nair',party:'Forward Bloc',color:'117431',voteCount:0},
+    {id:3,name:'NOTA',party:'None of the Above',color:'55606E',voteCount:0}];}
+  function defaultVoters(){
+    var names=['Aarav','Diya','Kabir','Sara','Vivaan','Anaya'];
+    var voters=names.map(function(n,i){return{name:n,label:'Voter '+('0'+(i+1)).slice(-2),address:makeAddress('voter-'+n),eligible:true,hasVoted:false};});
+    voters.push({name:'Guest',label:'Unregistered',address:makeAddress('guest'),eligible:false,hasVoted:false});
+    return voters;}
+  function createState(opts){
+    opts=opts||{};
+    var admin=makeAddress('admin'),contract=makeAddress('DecentraVote.Voting');
+    var genesisHash=hashHex('genesis:'+contract);
+    return{contract:contract,admin:admin,
+      electionName:opts.electionName||'DecentraVote Demo — Student Council 2026',
+      network:opts.network||'Sepolia (Ethereum test network)',
+      electionActive:false,connected:null,candidates:defaultCandidates(),voters:defaultVoters(),totalVotes:0,
+      blocks:[{number:0,hash:genesisHash,parentHash:'0x'+'0'.repeat(64).slice(2),timestamp:Date.now(),tx:null,note:'Genesis · contract deployed'}],
+      events:[],rejected:[],nonce:0};}
+  function voterByAddr(s,a){return s.voters.find(function(v){return v.address===a;})||null;}
+  function connect(s,a){s.connected=a;return voterByAddr(s,a);}
+  function setElectionActive(s,active){s.electionActive=!!active;return s.electionActive;}
+  function candidateById(s,id){return s.candidates.find(function(c){return c.id===id;})||null;}
+  function castVote(s,addr,candidateId){
+    var voter=voterByAddr(s,addr);
+    var gasUsed=43000+Math.floor(fnv1a('gas:'+addr+':'+candidateId,s.nonce)%6000);
+    s.nonce++;
+    var reason=null;
+    if(!addr||!voter)reason='no wallet connected';
+    else if(!s.electionActive)reason='election is not active';
+    else if(!voter.eligible)reason='voter is not eligible';
+    else if(voter.hasVoted)reason='voter has already voted';
+    else if(!candidateById(s,candidateId))reason='invalid candidate';
+    var txHash=hashHex('tx:'+addr+':'+candidateId+':'+s.nonce);
+    if(reason){s.rejected.unshift({txHash:txHash,from:addr,to:s.contract,method:'vote('+candidateId+')',status:'reverted',reason:reason,gasUsed:gasUsed,timestamp:Date.now()});
+      return{ok:false,reason:reason,txHash:txHash,gasUsed:gasUsed};}
+    voter.hasVoted=true;var cand=candidateById(s,candidateId);cand.voteCount+=1;s.totalVotes+=1;
+    var parent=s.blocks[s.blocks.length-1];var blockNumber=parent.number+1;
+    var blockHash=hashHex('block:'+blockNumber+':'+parent.hash+':'+txHash);
+    var evt={type:'VoteCast',voter:addr,candidateId:candidateId,blockNumber:blockNumber,txHash:txHash};
+    var tx={hash:txHash,from:addr,to:s.contract,method:'vote('+candidateId+')',status:'success',gasUsed:gasUsed,event:evt};
+    s.blocks.push({number:blockNumber,hash:blockHash,parentHash:parent.hash,timestamp:Date.now(),tx:tx,note:null});
+    s.events.push(evt);
+    return{ok:true,txHash:txHash,blockNumber:blockNumber,gasUsed:gasUsed};}
+  function tallyFromEvents(s){var c={};s.candidates.forEach(function(x){c[x.id]=0;});s.events.forEach(function(e){if(e.type==='VoteCast')c[e.candidateId]+=1;});return c;}
+  function auditMatches(s){var c=tallyFromEvents(s);return s.candidates.every(function(x){return c[x.id]===x.voteCount;});}
+  function verifyChain(s){for(var i=1;i<s.blocks.length;i++){if(s.blocks[i].parentHash!==s.blocks[i-1].hash)return{intact:false,brokenAt:s.blocks[i].number};}return{intact:true,brokenAt:null};}
+  function eligibleCount(s){return s.voters.filter(function(v){return v.eligible;}).length;}
+  function turnoutPct(s){var e=eligibleCount(s);return e===0?0:Math.round((s.totalVotes/e)*1000)/10;}
+  root.DV={hashHex:hashHex,makeAddress:makeAddress,shortAddr:shortAddr,createState:createState,connect:connect,
+    setElectionActive:setElectionActive,voterByAddr:voterByAddr,candidateById:candidateById,castVote:castVote,
+    tallyFromEvents:tallyFromEvents,auditMatches:auditMatches,verifyChain:verifyChain,eligibleCount:eligibleCount,turnoutPct:turnoutPct};
+})(window);
+</script>
+
+<!-- ============ UI ============ -->
+<script>
+/* ICONS (inline, stroke-based) */
+var ICON = {
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  usercheck:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16.5 12.5 18 14l3-3"/>',
+  ballot:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 11l2.5 2.5L16 8"/>',
+  cube:'<path d="M12 2.5 21 7v10l-9 4.5L3 17V7z"/><path d="M3 7l9 4.5L21 7M12 11.5V21"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m21 21-4.2-4.2"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M16 12.5h2.5"/><path d="M3 8.5h13a2 2 0 0 1 2 2"/>',
+  shield:'<path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  link:'<path d="M9.5 14.5 14.5 9.5"/><path d="M8 12l-2 2a3.5 3.5 0 0 0 5 5l2-2"/><path d="M16 12l2-2a3.5 3.5 0 0 0-5-5l-2 2"/>',
+  ban:'<circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/>',
+  scales:'<path d="M12 4v16M6 20h12M12 6l-6 2 6-2 6 2-6-2M3 14l3-6 3 6a3 3 0 0 1-6 0Zm12 0 3-6 3 6a3 3 0 0 1-6 0Z"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  bolt:'<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>',
+  file:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="m10 13-1.5 1.5L10 16m4-3 1.5 1.5L14 16"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v4h-4"/>',
+  power:'<path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  flow:'<path d="M4 12h16M14 6l6 6-6 6"/>',
+  gavel:'<path d="m14 6-6 6M9 5l4 4M5 9l4 4M12 13l6 6M3 21h8"/>',
+  users:'<circle cx="8.5" cy="8" r="3"/><path d="M2.5 20a6 6 0 0 1 12 0"/><path d="M16 6a3 3 0 0 1 0 6M21.5 20a6 6 0 0 0-4-5.6"/>'
+};
+function svg(name,color,extra){return '<svg viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '+(extra||'')+'>'+(ICON[name]||'')+'</svg>';}
+function circ(name,bg,size,icol){size=size||42;return '<span class="icirc" style="width:'+size+'px;height:'+size+'px;background:'+bg+'">'+svg(name,icol||'#fff')+'</span>';}
+function C(v){return 'var(--'+v+')';}
+var HEX={navy:'#212171',navy2:'#32328A',orange:'#F26522',orangeDk:'#C74E12',green:'#117431',purple:'#781CBD',slate:'#55606E'};
+
+/* ---------- state ---------- */
+var state = DV.createState();
+DV.setElectionActive(state, true);              // start open for an instant happy path
+DV.connect(state, state.voters[0].address);     // auto-connect first eligible voter
+var ui = { tab:'workflow', selCand:null, flashBlock:null };
+
+/* ---------- helpers ---------- */
+function fmtTime(ts){var d=new Date(ts);return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function initials(n){return n.slice(0,1).toUpperCase();}
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+
+function showToast(kind,title,detail){
+  var el=document.getElementById('toast');
+  el.innerHTML='<div class="toast '+kind+'">'+
+    '<span style="flex:0 0 auto;margin-top:1px">'+svg(kind==='good'?'check':'ban','#fff')+'</span>'+
+    '<div><div class="tt">'+esc(title)+'</div>'+(detail?'<div class="td">'+esc(detail)+'</div>':'')+'</div></div>';
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(function(){el.classList.remove('show');},4200);
+}
+
+/* ---------- header chrome ---------- */
+function renderHead(){
+  var open=state.electionActive;
+  document.getElementById('headRight').innerHTML=
+    '<span class="pill net">'+svg('cube',HEX.navy,'width="13" height="13"')+' '+esc(state.network)+'</span>'+
+    '<span class="pill '+(open?'open':'closed')+'"><span class="dot"></span>'+(open?'Election open':'Election closed')+'</span>';
+  var tabs=[['workflow','flow','Workflow'],['election','ballot','Live Demo Election'],['impact','scales','Impact & Effects']];
+  document.getElementById('tabs').innerHTML=tabs.map(function(t){
+    return '<button data-tab="'+t[0]+'" class="'+(ui.tab===t[0]?'active':'')+'"><span class="ti">'+svg(t[1])+'</span>'+t[2]+'</button>';
+  }).join('');
+}
+
+/* ================= WORKFLOW ================= */
+function viewWorkflow(){
+  var steps=[
+    ['usercheck',HEX.navy,'1','VERIFY','Eligibility','Voter eligibility is checked off-chain before any vote is allowed.'],
+    ['ballot',HEX.orange,'2','VOTE','Cast ballot','An eligible voter selects a candidate and submits exactly one vote.'],
+    ['file',HEX.purple,'3','RECORD','Smart contract','Solidity enforces the rules and records the vote as an on-chain event.'],
+    ['search',HEX.green,'4','VERIFY','Result & audit','Anyone can independently recompute results from the on-chain events.']
+  ];
+  var layers=[['eye','FRONTEND','React'],['link','WEB3 LAYER','ethers.js'],['file','SMART CONTRACT','Solidity'],['cube','BLOCKCHAIN','Test net'],['search','AUDIT / RESULT','On-chain events']];
+  var lc=[HEX.navy,HEX.orange,HEX.purple,HEX.navy2,HEX.green];
+  return ''+
+  '<h1 class="page">How DecentraVote works</h1>'+
+  '<p class="lead">DecentraVote moves the trust in an election from a private database toward rules enforced in a smart contract and records anyone can verify. The flow is a simple loop: <b>Verify → Vote → Record → Verify result</b>.</p>'+
+  '<div class="steps">'+steps.map(function(s){
+     return '<div class="step"><span class="num" style="background:'+s[1]+'">'+s[2]+'</span>'+
+       circ(s[0],s[1],44)+'<h3>'+s[3]+'</h3><div class="sub" style="color:'+s[1]+'">'+s[4]+'</div><p>'+s[5]+'</p></div>';
+   }).join('')+'</div>'+
+
+  '<div class="mt"><p class="section-h">System layers · production stack</p>'+
+   '<div class="flowline">'+layers.map(function(l,i){
+      return '<div class="layer">'+circ(l[0],lc[i],38)+'<div class="lname">'+l[1]+'</div><div class="ltech">'+l[2]+'</div></div>';
+   }).join('')+'</div></div>'+
+
+  '<div class="mt split">'+
+    '<div class="kv off"><div class="t">Off-chain</div>Identity &amp; eligibility data are verified and kept off the public ledger.'+
+      '<ul><li>Who is registered to vote</li><li>Eligibility checks / credentials</li></ul></div>'+
+    '<div class="kv on"><div class="t">On-chain</div>Only the vote transaction and contract events are written to the blockchain.'+
+      '<ul><li><span class="mono">vote(candidateId)</span> transaction</li><li><span class="mono">VoteCast</span> events &amp; tallies</li></ul></div>'+
+  '</div>'+
+  '<p class="note mt-sm">No personally identifiable voter data is stored on-chain. The ledger records <em>that</em> an eligible address voted and for which option — not who the person is.</p>'+
+
+  '<div class="mt rowbetween">'+
+    '<div><p class="section-h" style="margin-bottom:4px">See it run</p><div style="color:var(--slate);font-size:13.5px">Open the interactive demo election and cast a vote — watch it become a block you can audit.</div></div>'+
+    '<button class="btn btn-primary" data-tab="election">Open the live demo election '+svg('flow','#fff','width="16" height="16"')+'</button>'+
+  '</div>'+
+
+  '<details class="contract mt"><summary>'+svg('file','#e8e8f5','width="16" height="16"')+' View the Solidity smart contract — Voting.sol</summary><pre><code>'+solidityHTML()+'</code></pre></details>';
+}
+
+/* ================= LIVE ELECTION ================= */
+function viewElection(){
+  var open=state.electionActive;
+  var conn=state.connected?DV.voterByAddr(state,state.connected):null;
+
+  /* wallet + registry */
+  var accounts=state.voters.map(function(v){
+    var sel=state.connected===v.address;
+    var col=v.eligible?HEX.navy:HEX.slate;
+    var tag=!v.eligible?'<span class="tag inelig">Not eligible</span>':(v.hasVoted?'<span class="tag voted">Voted</span>':'<span class="tag elig">Eligible</span>');
+    return '<button class="acct '+(sel?'sel':'')+'" data-connect="'+v.address+'">'+
+      '<span class="av" style="background:'+col+'">'+initials(v.name)+'</span>'+
+      '<span style="min-width:0"><span class="nm">'+v.name+' <span style="color:var(--mute);font-weight:600">· '+v.label+'</span></span><br><span class="ad">'+DV.shortAddr(v.address)+'</span></span>'+
+      '<span style="margin-left:auto">'+tag+'</span></button>';
+  }).join('');
+
+  var connBox = conn
+    ? '<div class="conn live">'+circ('wallet',HEX.green,34)+'<div style="min-width:0"><div style="font-weight:800;font-size:13.5px">Connected · '+conn.name+'</div>'+
+        '<div class="mono" style="font-size:11.5px;color:var(--slate)">'+conn.address+'</div></div>'+
+        '<button class="btn btn-ghost btn-sm" data-connect="" style="margin-left:auto">Disconnect</button></div>'
+    : '<div class="conn">'+circ('wallet',HEX.mute||HEX.slate,34)+'<div style="font-weight:700;font-size:13px;color:var(--slate)">No wallet connected — pick an account above</div></div>';
+
+  /* ballot */
+  var canSubmit = !!(conn && open && ui.selCand!==null);
+  var ballot=state.candidates.map(function(c){
+    var sel=ui.selCand===c.id;
+    return '<div class="cand '+(sel?'sel':'')+'" data-cand="'+c.id+'">'+
+      '<span class="sym" style="background:#'+c.color+'">'+initials(c.name==='NOTA'?'N':c.name)+'</span>'+
+      '<span><span class="cn">'+c.name+'</span><br><span class="cp">'+c.party+' · id '+c.id+'</span></span>'+
+      '<span class="radio"></span></div>';
+  }).join('');
+  var helperMsg, helperCaution=false;
+  if(!conn) helperMsg='Connect a wallet above to cast a vote.';
+  else if(!open) helperMsg='The election is closed — reopen it to submit a vote.';
+  else if(conn.hasVoted){ helperCaution=true; helperMsg='<b>'+conn.name+'</b> has already voted. Submitting again is rejected on-chain by the <span class="mono">!hasVoted</span> guard — try it to see the revert.'; }
+  else if(!conn.eligible){ helperCaution=true; helperMsg='<b>'+conn.name+'</b> is not a registered voter. Submitting is rejected by the <span class="mono">isEligible</span> guard — try it to see the revert.'; }
+  else if(ui.selCand===null) helperMsg='Select a candidate, then submit. This calls <span class="mono">vote(candidateId)</span> on the contract.';
+  else helperMsg='Ready — submitting calls <span class="mono">vote('+ui.selCand+')</span> and mines a new block.';
+
+  /* results */
+  var max=Math.max(1,Math.max.apply(null,state.candidates.map(function(c){return c.voteCount;})));
+  var results=state.candidates.map(function(c){
+    var pct=state.totalVotes?Math.round(c.voteCount/state.totalVotes*100):0;
+    var w=Math.round(c.voteCount/max*100);
+    return '<div class="resrow"><div class="top"><span class="dot" style="width:10px;height:10px;border-radius:50%;background:#'+c.color+'"></span>'+
+      '<span class="nm">'+c.name+'</span><span class="ct">'+c.voteCount+'</span><span class="pc">'+pct+'%</span></div>'+
+      '<div class="bar"><span style="width:'+w+'%;background:#'+c.color+'"></span></div></div>';
+  }).join('');
+  var leader=state.candidates.slice().sort(function(a,b){return b.voteCount-a.voteCount;})[0];
+  var leaderTxt=state.totalVotes?(leader.voteCount>0?leader.name:'—'):'—';
+
+  /* ledger */
+  var ledger=state.blocks.slice().reverse().map(function(b){
+    if(!b.tx){
+      return '<div class="block genesis"><div class="bn"><div class="k">BLOCK</div><div class="v">#'+b.number+'</div></div>'+
+        '<div class="mid"><div class="line1"><b>'+b.note+'</b></div><div class="meta">contract '+b.hash.slice(0,18)+'…</div></div>'+
+        '<div class="right"><div class="h">'+b.hash.slice(0,10)+'…'+b.hash.slice(-6)+'</div><div class="g">'+fmtTime(b.timestamp)+'</div></div></div>';
+    }
+    var cand=DV.candidateById(state,b.tx.event.candidateId);
+    var fl=(ui.flashBlock===b.number)?' flash':'';
+    return '<div class="block'+fl+'"><div class="bn"><div class="k">BLOCK</div><div class="v">#'+b.number+'</div></div>'+
+      '<div class="mid">'+
+        '<div class="line1"><span class="mono">'+DV.shortAddr(b.tx.from)+'</span> → <span class="mono">'+DV.shortAddr(b.tx.to)+'</span> · <b>'+b.tx.method+'</b></div>'+
+        '<div class="evt">✔ VoteCast(voter: '+DV.shortAddr(b.tx.event.voter)+', candidateId: '+b.tx.event.candidateId+')  ·  '+esc(cand?cand.name:'')+'</div>'+
+        '<div class="meta">tx '+b.tx.hash.slice(0,22)+'…  ·  parent '+b.parentHash.slice(0,12)+'…</div>'+
+      '</div>'+
+      '<div class="right"><div class="h">'+b.hash.slice(0,10)+'…'+b.hash.slice(-6)+'</div><div class="g">gas '+b.tx.gasUsed.toLocaleString()+' · '+fmtTime(b.timestamp)+'</div></div></div>';
+  }).join('');
+  var chain=DV.verifyChain(state);
+
+  /* audit */
+  var counts=DV.tallyFromEvents(state);
+  var auditRows=state.candidates.map(function(c){
+    return '<tr><td>'+c.name+'</td><td class="num">'+counts[c.id]+'</td><td class="num">'+c.voteCount+'</td><td style="text-align:center">'+(counts[c.id]===c.voteCount?svg('check',HEX.green,'width="16" height="16"'):svg('ban',HEX.red,'width="16" height="16"'))+'</td></tr>';
+  }).join('');
+  var matches=DV.auditMatches(state);
+
+  var rejected = state.rejected.length
+    ? state.rejected.slice(0,6).map(function(r){
+        var who=DV.voterByAddr(state,r.from);
+        return '<div class="rej">'+svg('ban',HEX.red,'width="15" height="15"')+'<div><b>'+(who?who.name:'—')+'</b> · '+r.method+' <span class="r">reverted: '+r.reason+'</span></div><span class="hh">'+r.txHash.slice(0,12)+'…</span></div>';
+      }).join('')
+    : '<div style="color:var(--mute);font-size:12.5px;padding:4px 2px">No rejected transactions yet. Try voting twice, or with the unregistered account.</div>';
+
+  return ''+
+  '<div class="card pad mb-sm"><div class="electionbar">'+
+    circ('ballot',HEX.orange,40)+
+    '<div><div class="name">'+esc(state.electionName)+'</div>'+
+    '<div class="meta">contract '+state.contract+' · '+esc(state.network)+'</div></div>'+
+    '<div class="ctrls">'+
+      '<span class="pill '+(open?'open':'closed')+'" style="align-self:center"><span class="dot"></span>'+(open?'Open':'Closed')+'</span>'+
+      (open
+        ? '<button class="btn btn-ghost btn-sm" data-action="close">'+svg('power',HEX.navy,'width="15" height="15"')+' Close election</button>'
+        : '<button class="btn btn-navy btn-sm" data-action="open">'+svg('power','#fff','width="15" height="15"')+' Open election</button>')+
+      '<button class="btn btn-ghost btn-sm" data-action="reset">'+svg('refresh',HEX.navy,'width="15" height="15"')+' Reset</button>'+
+    '</div>'+
+  '</div>'+
+  '<div class="hint mt-sm">'+svg('bolt',HEX.navy,'width="14" height="14"')+' <b>Try it:</b> cast a vote below → then vote again (rejected: already voted) → switch to <b>Guest · Unregistered</b> and vote (rejected: not eligible) → <b>Close election</b> and check the audit.</div>'+
+  '</div>'+
+
+  '<div class="cols3">'+
+    /* col A */
+    '<div class="card pad"><p class="section-h">Wallet &amp; voter registry</p>'+
+      connBox+
+      '<div class="mt-sm" style="display:flex;flex-direction:column;gap:8px">'+accounts+'</div>'+
+      '<div style="font-size:11.5px;color:var(--mute);margin-top:10px">Eligibility is decided <b>off-chain</b>; the contract only stores whether an address is registered and whether it has voted.</div>'+
+    '</div>'+
+    /* col B */
+    '<div class="card pad"><p class="section-h">Ballot · cast your vote</p>'+ballot+
+      '<button class="btn btn-primary" data-action="vote" '+(canSubmit?'':'disabled')+' style="width:100%;justify-content:center;margin-top:4px">'+
+        svg('ballot','#fff','width="16" height="16"')+' Submit vote transaction</button>'+
+      '<div class="hint" style="margin-top:10px'+(helperCaution?';background:var(--orTint);border-color:#F3D3C1':'')+'">'+helperMsg+'</div>'+
+    '</div>'+
+    /* col C */
+    '<div class="card pad"><p class="section-h">Live results</p>'+results+
+      '<div class="statgrid"><div class="stat"><div class="v">'+state.totalVotes+'</div><div class="l">Votes recorded</div></div>'+
+      '<div class="stat"><div class="v">'+DV.turnoutPct(state)+'%</div><div class="l">Turnout (of '+DV.eligibleCount(state)+')</div></div>'+
+      '<div class="stat"><div class="v" style="font-size:16px;padding-top:5px">'+esc(leaderTxt)+'</div><div class="l">Leading</div></div>'+
+      '<div class="stat"><div class="v">'+(state.blocks.length-1)+'</div><div class="l">Blocks mined</div></div></div>'+
+    '</div>'+
+  '</div>'+
+
+  /* ledger */
+  '<div class="card pad mt"><div class="rowbetween mb-sm"><p class="section-h" style="margin:0">On-chain ledger · block explorer</p>'+
+    '<span class="chaincheck">'+(chain.intact?svg('link',HEX.green,'width="15" height="15"')+' Hash chain intact':svg('ban',HEX.red,'width="15" height="15"')+' Chain broken at #'+chain.brokenAt)+'</span></div>'+
+    '<div class="ledger">'+ledger+'</div>'+
+    '<div style="font-size:11.5px;color:var(--mute);margin-top:10px">Each block links to its parent by hash, so a recorded vote cannot be silently altered without breaking the chain. Hashes here are illustrative.</div>'+
+  '</div>'+
+
+  /* audit */
+  '<div class="card pad mt"><p class="section-h">Independent audit · recompute results from events</p>'+
+    '<div class="match mb-sm">'+svg('shield','#117431','width="17" height="17"')+' '+(matches?'Results verified — the tally rebuilt from <span class="mono" style="margin:0 4px">VoteCast</span> events matches contract state exactly.':'Mismatch detected between events and contract state.')+'</div>'+
+    '<table class="audit"><thead><tr><th>Candidate</th><th style="text-align:right">From events</th><th style="text-align:right">Contract state</th><th style="text-align:center">Match</th></tr></thead><tbody>'+auditRows+'</tbody></table>'+
+    '<p class="section-h" style="margin:18px 0 10px">Rejected transactions <span style="color:var(--mute);font-weight:600;text-transform:none;letter-spacing:0">— guards that fired, no vote recorded</span></p>'+
+    '<div style="display:flex;flex-direction:column;gap:7px">'+rejected+'</div>'+
+  '</div>';
+}
+
+/* ================= IMPACT ================= */
+function viewImpact(){
+  var effects=[
+    ['shield',HEX.navy,'Tamper-evident records','Votes are stored as hash-linked blocks, so a recorded vote cannot be quietly changed after the fact.'],
+    ['usercheck',HEX.orange,'One person, one vote','The contract tracks whether an eligible address has already voted and rejects any second attempt.'],
+    ['search',HEX.green,'Independent verifiability','Anyone can rebuild the result directly from on-chain events — no need to trust a single authority.'],
+    ['file',HEX.purple,'Rules enforced in code','Voting rules live in Solidity, not only in app-side checks that could be bypassed.'],
+    ['eye',HEX.navy2,'Transparent process','Every accepted and rejected transaction is visible in the ledger, making the process auditable end to end.'],
+    ['users',HEX.orangeDk,'Privacy-aware by design','Identity stays off-chain; the ledger shows that an eligible address voted, not who the person is.']
+  ];
+  var cmp=[
+    ['Trust model','Central authority &amp; its database','Rules in a smart contract + verifiable records'],
+    ['Record storage','Central database (mutable)','Blockchain-backed, hash-linked (tamper-evident)'],
+    ['Result verification','Authority-dependent','Anyone can recompute from on-chain events'],
+    ['Double-vote prevention','Application / server logic','Enforced on-chain by <span class="mono">!hasVoted</span>'],
+    ['Transparency','Limited','Transaction-level, public']
+  ];
+  var matches=DV.auditMatches(state);
+  var metrics=[
+    [state.totalVotes,'Votes recorded'],
+    [(state.blocks.length-1),'Blocks mined'],
+    [state.rejected.length,'Invalid attempts rejected'],
+    [(state.totalVotes&&matches?'100%':(state.totalVotes?'—':'0%')),'Results reproducible from events'],
+    [DV.turnoutPct(state)+'%','Turnout this session']
+  ];
+  return ''+
+  '<h1 class="page">Impact &amp; effects</h1>'+
+  '<p class="lead">What changes once DecentraVote is fully implemented for a demo election environment: trust shifts from a private database toward rules and records that participants can check for themselves.</p>'+
+
+  '<p class="section-h">Effects after full implementation</p>'+
+  '<div class="effcards">'+effects.map(function(e){
+    return '<div class="eff">'+circ(e[0],e[1],44)+'<h3>'+e[2]+'</h3><p>'+e[3]+'</p></div>';
+  }).join('')+'</div>'+
+
+  '<div class="mt"><p class="section-h">From this demo session</p>'+
+   '<div class="metrics">'+metrics.map(function(m){
+      return '<div class="metric"><div class="v">'+m[0]+'</div><div class="l">'+m[1]+'</div></div>';
+   }).join('')+'</div>'+
+   '<div style="font-size:11.5px;color:var(--mute);margin-top:8px">These figures are computed live from the demo you just ran in the Live Election tab — not projected real-world statistics.</div></div>'+
+
+  '<div class="mt"><p class="section-h">Centralized e-voting vs DecentraVote</p>'+
+   '<table class="cmp"><thead><tr><th style="width:26%">Aspect</th><th>Centralized e-voting</th><th>DecentraVote</th></tr></thead><tbody>'+
+    cmp.map(function(r){return '<tr><th>'+r[0]+'</th><td>'+r[1]+'</td><td class="dv">'+r[2]+'</td></tr>';}).join('')+
+   '</tbody></table></div>'+
+
+  '<p class="note mt">Scope &amp; limits: this is a prototype demonstrating the architecture. Real deployments still depend on a trustworthy off-chain eligibility/identity layer, careful ballot-privacy design, endpoint security, and scalability/gas handling. DecentraVote is not a claim that blockchain is automatically superior for every real-world election.</p>';
+}
+
+/* ---------- Solidity source (for the viewer) ---------- */
+function solidityHTML(){
+  var src=
+'// SPDX-License-Identifier: MIT\n'+
+'pragma solidity ^0.8.20;\n\n'+
+'/// @title DecentraVote — minimal on-chain voting\n'+
+'/// @notice Identity & eligibility are handled OFF-CHAIN. Only the vote\n'+
+'///         transaction and tallies live on-chain. No PII is stored here.\n'+
+'contract Voting {\n'+
+'    struct Candidate { string name; uint256 voteCount; }\n\n'+
+'    address public admin;\n'+
+'    bool    public electionActive;\n'+
+'    Candidate[] public candidates;\n'+
+'    mapping(address => bool) public isEligible; // set from off-chain check\n'+
+'    mapping(address => bool) public hasVoted;\n'+
+'    uint256 public totalVotes;\n\n'+
+'    event VoterRegistered(address indexed voter);\n'+
+'    event ElectionStatusChanged(bool active);\n'+
+'    event VoteCast(address indexed voter, uint256 indexed candidateId);\n\n'+
+'    modifier onlyAdmin() { require(msg.sender == admin, "not admin"); _; }\n\n'+
+'    constructor(string[] memory names) {\n'+
+'        admin = msg.sender;\n'+
+'        for (uint256 i = 0; i < names.length; i++)\n'+
+'            candidates.push(Candidate({ name: names[i], voteCount: 0 }));\n'+
+'    }\n\n'+
+'    function setElectionActive(bool active) external onlyAdmin {\n'+
+'        electionActive = active;\n'+
+'        emit ElectionStatusChanged(active);\n'+
+'    }\n\n'+
+'    // Register an address whose eligibility was verified off-chain.\n'+
+'    function registerVoter(address voter) external onlyAdmin {\n'+
+'        isEligible[voter] = true;\n'+
+'        emit VoterRegistered(voter);\n'+
+'    }\n\n'+
+'    // Cast one vote. The four core rules are enforced on-chain.\n'+
+'    function vote(uint256 candidateId) external {\n'+
+'        require(electionActive,                 "election is not active");\n'+
+'        require(isEligible[msg.sender],         "voter is not eligible");\n'+
+'        require(!hasVoted[msg.sender],          "voter has already voted");\n'+
+'        require(candidateId < candidates.length,"invalid candidate");\n\n'+
+'        hasVoted[msg.sender] = true;\n'+
+'        candidates[candidateId].voteCount += 1;\n'+
+'        totalVotes += 1;\n'+
+'        emit VoteCast(msg.sender, candidateId);\n'+
+'    }\n\n'+
+'    // Anyone can read tallies straight from chain state for audit.\n'+
+'    function getResult(uint256 candidateId)\n'+
+'        external view returns (string memory name, uint256 voteCount)\n'+
+'    {\n'+
+'        Candidate storage c = candidates[candidateId];\n'+
+'        return (c.name, c.voteCount);\n'+
+'    }\n'+
+'}';
+  // lightweight syntax highlight
+  src=esc(src);
+  src=src.replace(/(\/\/[^\n]*|\/\/\/[^\n]*)/g,'<span class="sol-c">$1</span>');
+  src=src.replace(/(&quot;[^&]*?&quot;)/g,'<span class="sol-s">$1</span>');
+  src=src.replace(/\b(pragma|solidity|contract|struct|address|bool|uint256|mapping|string|memory|storage|public|external|view|returns|function|constructor|event|modifier|require|emit|indexed|for|return|if)\b/g,'<span class="sol-k">$1</span>');
+  src=src.replace(/\b(vote|setElectionActive|registerVoter|getResult|VoteCast|VoterRegistered|ElectionStatusChanged|onlyAdmin)\b/g,'<span class="sol-f">$1</span>');
+  return src;
+}
+
+/* ---------- render + events ---------- */
+function render(){
+  renderHead();
+  var v=document.getElementById('view');
+  if(ui.tab==='workflow') v.innerHTML=viewWorkflow();
+  else if(ui.tab==='election') v.innerHTML=viewElection();
+  else v.innerHTML=viewImpact();
+  ui.flashBlock=null;                 // one-shot flash
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-tab],[data-action],[data-connect],[data-cand]');
+  if(!t)return;
+  if(t.hasAttribute('data-tab')){ ui.tab=t.getAttribute('data-tab'); ui.selCand=null; render(); window.scrollTo({top:0,behavior:'auto'}); return; }
+  if(t.hasAttribute('data-connect')){
+    var a=t.getAttribute('data-connect'); DV.connect(state, a||null); render(); return;
+  }
+  if(t.hasAttribute('data-cand')){ ui.selCand=parseInt(t.getAttribute('data-cand'),10); render(); return; }
+  if(t.hasAttribute('data-action')){
+    var act=t.getAttribute('data-action');
+    if(act==='open'){ DV.setElectionActive(state,true); showToast('good','Election opened','setElectionActive(true) · organizer tx confirmed'); }
+    else if(act==='close'){ DV.setElectionActive(state,false); showToast('good','Election closed','Final results are now locked for audit'); }
+    else if(act==='reset'){ state=DV.createState(); DV.setElectionActive(state,true); DV.connect(state,state.voters[0].address); ui.selCand=null; showToast('good','Demo reset','Fresh contract deployed · genesis block created'); }
+    else if(act==='vote'){
+      var r=DV.castVote(state, state.connected, ui.selCand);
+      if(r.ok){ ui.flashBlock=r.blockNumber; ui.selCand=null;
+        showToast('good','Vote confirmed in block #'+r.blockNumber, r.txHash+' · gas '+r.gasUsed.toLocaleString());
+      } else {
+        showToast('bad','Transaction reverted', 'reason: '+r.reason);
+      }
+    }
+    render(); return;
+  }
+});
+
+render();
+</script>
+</body>
+</html>
